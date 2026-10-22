@@ -1,0 +1,76 @@
+name: Pull request test agent
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: pr-test-agent-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Update unit tests
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout the trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: trusted
+          persist-credentials: false
+
+      - name: Checkout the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Fetch the base commit
+        working-directory: pr
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git fetch --no-tags "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git" "$BASE_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+
+      - name: Install the trusted agent
+        working-directory: trusted/agents/pr-test-agent
+        run: npm ci
+
+      - name: Install pull request dependencies
+        working-directory: pr
+        env:
+          GITHUB_TOKEN: ""
+          GH_TOKEN: ""
+          CURSOR_API_KEY: ""
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix frontend
+
+      - name: Run the test agent
+        working-directory: trusted/agents/pr-test-agent
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_WORKSPACE: ${{ github.workspace }}/pr
+          TRUSTED_ROOT: ${{ github.workspace }}/trusted
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+          REPO: ${{ github.repository }}
+        run: npm start

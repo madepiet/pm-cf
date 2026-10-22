@@ -16,6 +16,9 @@ coverage/
 .env.*
 !.env.example
 
+# Agent runtime output
+agents/pr-test-agent/out/
+
 # Logs
 *.log
 
