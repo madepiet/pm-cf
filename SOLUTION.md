@@ -69,7 +69,30 @@ These tests cover modules that previously had no unit tests. Current suite resul
 
 ## Example run
 
-The example pull request adds task counts without tests. The workflow on that pull request is the execution record: the agent's decision, the skills it listed, and the test commands the runner verified. This section is updated after that run with the pull request link and those results.
+Pull request: https://github.com/madepiet/pm-cf/pull/1
+
+The diff adds `summarizeTasks`, `GET /api/todos/summary`, `formatTaskSummary`, and an optional header summary. Existing tests still passed without asserting any of that behavior.
+
+### Automated workflow
+
+[Actions run 39801011804](https://github.com/madepiet/pm-cf/actions/runs/39801011804) completed successfully and commented on the pull request.
+
+- Decision: the model did not start.
+- Reason: `CURSOR_API_KEY` is not configured for the repository.
+- Skills used: none. The runner stops before loading a model.
+- Tests executed by the model: none. The workflow still installed dependencies and posted the result.
+
+### Same diff, skills applied in this session
+
+The agent definition and skills were then applied directly to that diff, because the Actions secret is absent.
+
+- Decision: `updated-tests`.
+- Reason: the new summary behavior has no assertions.
+- Skills: `analyze-pr-test-gaps`, `write-backend-unit-tests`, `write-frontend-unit-tests`, `verify-and-report-tests`.
+- Files: `backend/tests/summary.test.ts`, `frontend/src/features/todos/utils/todos.test.ts`, `frontend/src/features/todos/components/TodosHeader.test.tsx`.
+- Verification: `npm test -- tests/summary.test.ts` in `backend` passed (2 tests). `npm test -- src/features/todos/utils/todos.test.ts src/features/todos/components/TodosHeader.test.tsx` in `frontend` passed (5 tests).
+
+A later push of those tests starts the workflow again. Until the secret exists, that run comments the same prerequisite instead of calling the model.
 
 ## Assumptions
 

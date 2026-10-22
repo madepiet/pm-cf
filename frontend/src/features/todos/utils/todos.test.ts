@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { selectTodos } from './todos'
+import { formatTaskSummary, selectTodos } from './todos'
 import type { Todo } from '../types'
 
 const base: Todo = {
@@ -12,6 +12,14 @@ const base: Todo = {
   created_at: '2026-10-01T12:00:00Z',
   updated_at: '2026-10-01T12:00:00Z',
 }
+
+it('formats an empty list, a finished list, and a mixed list', () => {
+  expect(formatTaskSummary({ total: 0, open: 0 })).toBe('No tasks yet.')
+  expect(formatTaskSummary({ total: 4, open: 0 })).toBe(
+    'All tasks are complete.',
+  )
+  expect(formatTaskSummary({ total: 4, open: 3 })).toBe('3 open of 4.')
+})
 
 describe('selectTodos', () => {
   it('combines status with a case-insensitive search in the description', () => {

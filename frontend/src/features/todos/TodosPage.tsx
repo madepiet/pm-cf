@@ -8,6 +8,7 @@ import { TodoFilters } from './components/TodoFilters'
 import { TodoList } from './components/TodoList'
 import { TodosHeader } from './components/TodosHeader'
 import { useTodoFilters } from './hooks/useTodoFilters'
+import { formatTaskSummary } from './utils/todos'
 import { useTodosBusy } from './hooks/useTodosBusy'
 import { useTodosQuery } from './hooks/useTodosQuery'
 import { useUpdateTodoMutation } from './hooks/useUpdateTodoMutation'
@@ -51,6 +52,10 @@ export function TodosPage() {
         <TodosHeader
           disabled={todosQuery.isPending || busy}
           onCreate={() => setEditor('new')}
+          summary={formatTaskSummary({
+            total: todos.length,
+            open: todos.filter((todo) => !todo.completed).length,
+          })}
         />
         <TodoFilters
           filter={filters.filter}

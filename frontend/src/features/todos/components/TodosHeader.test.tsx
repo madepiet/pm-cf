@@ -23,3 +23,13 @@ it('invokes creation when enabled and blocks it when disabled', async () => {
   await user.click(button)
   expect(onCreate).toHaveBeenCalledTimes(1)
 })
+
+it('shows a task summary in place of the default subtitle', () => {
+  render(
+    <TodosHeader disabled={false} onCreate={vi.fn()} summary="3 open of 4." />,
+  )
+  expect(screen.getByText('3 open of 4.')).toBeVisible()
+  expect(
+    screen.queryByText('Create, organize, and complete tasks.'),
+  ).not.toBeInTheDocument()
+})
